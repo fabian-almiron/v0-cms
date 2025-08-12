@@ -1,0 +1,134 @@
+/* Modern Theme Styles */
+@layer base {
+  :root {
+    /* Modern Theme Color Variables - Vibrant & Contemporary */
+    --modern-background: 0 0% 100%;
+    --modern-foreground: 240 10% 3.9%;
+    --modern-card: 0 0% 100%;
+    --modern-card-foreground: 240 10% 3.9%;
+    --modern-popover: 0 0% 100%;
+    --modern-popover-foreground: 240 10% 3.9%;
+    --modern-primary: 262 83% 58%; /* Purple */
+    --modern-primary-foreground: 210 40% 98%;
+    --modern-secondary: 270 6% 93%;
+    --modern-secondary-foreground: 240 10% 3.9%;
+    --modern-muted: 270 6% 93%;
+    --modern-muted-foreground: 240 5% 64.9%;
+    --modern-accent: 271 91% 65%; /* Bright purple accent */
+    --modern-accent-foreground: 210 40% 98%;
+    --modern-destructive: 0 84.2% 60.2%;
+    --modern-destructive-foreground: 210 40% 98%;
+    --modern-border: 240 6% 90%;
+    --modern-input: 240 6% 90%;
+    --modern-ring: 262 83% 58%;
+    --modern-radius: 0.75rem;
+  }
+
+  .dark {
+    /* Modern Theme Dark Mode Variables */
+    --modern-background: 240 10% 3.9%;
+    --modern-foreground: 0 0% 98%;
+    --modern-card: 240 10% 3.9%;
+    --modern-card-foreground: 0 0% 98%;
+    --modern-popover: 240 10% 3.9%;
+    --modern-popover-foreground: 0 0% 98%;
+    --modern-primary: 263 70% 50.4%;
+    --modern-primary-foreground: 210 40% 98%;
+    --modern-secondary: 240 4% 15.9%;
+    --modern-secondary-foreground: 0 0% 98%;
+    --modern-muted: 240 4% 15.9%;
+    --modern-muted-foreground: 240 5% 64.9%;
+    --modern-accent: 271 91% 65%;
+    --modern-accent-foreground: 240 10% 3.9%;
+    --modern-destructive: 0 62.8% 30.6%;
+    --modern-destructive-foreground: 210 40% 98%;
+    --modern-border: 240 4% 15.9%;
+    --modern-input: 240 4% 15.9%;
+    --modern-ring: 263 70% 50.4%;
+  }
+}
+
+/* Modern Theme Custom Classes */
+.modern-hero-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--modern-primary)) 0%, 
+    hsl(var(--modern-accent)) 50%,
+    hsl(262 83% 70%) 100%);
+}
+
+.modern-card-hover {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid hsl(var(--modern-border));
+}
+
+.modern-card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px hsl(var(--modern-accent) / 0.1);
+  border-color: hsl(var(--modern-accent) / 0.3);
+}
+
+.modern-text-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--modern-primary)), 
+    hsl(var(--modern-accent)));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modern-button-primary {
+  background: linear-gradient(135deg, 
+    hsl(var(--modern-primary)), 
+    hsl(var(--modern-accent)));
+  color: hsl(var(--modern-primary-foreground));
+  border: none;
+  border-radius: var(--modern-radius);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-button-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.modern-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 0 30px hsl(var(--modern-primary) / 0.3);
+}
+
+.modern-button-primary:hover::before {
+  left: 100%;
+}
+
+.modern-glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modern-glow {
+  box-shadow: 0 0 50px hsl(var(--modern-accent) / 0.3);
+}
+
+.modern-neon-text {
+  color: hsl(var(--modern-accent));
+  text-shadow: 
+    0 0 5px hsl(var(--modern-accent) / 0.5),
+    0 0 10px hsl(var(--modern-accent) / 0.5),
+    0 0 15px hsl(var(--modern-accent) / 0.5);
+} 

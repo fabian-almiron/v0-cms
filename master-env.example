@@ -1,0 +1,150 @@
+# =============================================
+# MASTER DASHBOARD CONFIGURATION
+# =============================================
+# This is for the MASTER DASHBOARD that manages multiple CMS instances
+
+# Master Dashboard Supabase Database (REQUIRED)
+# Create a separate Supabase project for the master dashboard
+NEXT_PUBLIC_MASTER_SUPABASE_URL=https://your-master-project-ref.supabase.co
+NEXT_PUBLIC_MASTER_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+MASTER_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# =============================================
+# SHARED CMS DATABASE CONFIGURATION
+# =============================================
+# This is the SHARED database that all CMS instances will use (multi-tenant)
+# This should be your EXISTING CMS Supabase project
+
+# Shared CMS Database (where all sites will be created)
+NEXT_PUBLIC_SUPABASE_URL=https://your-cms-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# =============================================
+# API CONFIGURATION
+# =============================================
+
+# Vercel API Configuration (REQUIRED for auto-deployment)
+# Get these from: https://vercel.com/account/tokens
+VERCEL_TOKEN=your-vercel-api-token
+VERCEL_TEAM_ID=your-team-id-optional
+
+# Bitbucket Integration (REQUIRED for repository automation)
+# API tokens are the long-term replacement for App passwords
+# Create a WORKSPACE-SCOPED API token at: https://bitbucket.org/account/settings/api-tokens/
+BITBUCKET_USERNAME=your-bitbucket-username
+BITBUCKET_API_TOKEN=your-workspace-scoped-api-token
+BITBUCKET_WORKSPACE=trukraft
+BITBUCKET_MASTER_REPO=cms-master
+
+# Required API Token Scopes for workspace "trukraft":
+# - Repositories: Read, Write, Admin
+# - Account: Read
+# - Projects: Read, Write (optional)
+
+# Legacy App Password Support (deprecated - use API tokens instead)
+# BITBUCKET_APP_PASSWORD=your-app-password
+
+# =============================================
+# DEPLOYMENT CONFIGURATION
+# =============================================
+
+# Default Git Repository for CMS Template (Auto-configured from Bitbucket settings)
+DEFAULT_CMS_REPO=https://bitbucket.org/trukraft/cms-master.git
+DEFAULT_CMS_BRANCH=main
+
+# Default Vercel Settings
+DEFAULT_VERCEL_REGION=iad1
+
+# =============================================
+# OPTIONAL SETTINGS
+# =============================================
+
+# Email Configuration (for notifications)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# Webhook URLs (for external integrations)
+DEPLOYMENT_WEBHOOK_URL=https://your-webhook-endpoint.com/deploy
+NOTIFICATION_WEBHOOK_URL=https://your-notification-endpoint.com
+
+# Analytics & Monitoring
+ANALYTICS_API_KEY=your-analytics-api-key
+MONITORING_API_KEY=your-monitoring-api-key
+
+# Security Settings
+ENCRYPTION_KEY=your-32-character-encryption-key
+JWT_SECRET=your-jwt-secret-for-auth
+
+# =============================================
+# DEVELOPMENT SETTINGS
+# =============================================
+
+# Master Dashboard URL (for webhooks and redirects)
+NEXT_PUBLIC_MASTER_DASHBOARD_URL=https://master.yourdomain.com
+
+# Debug Mode
+DEBUG_MODE=false
+LOG_LEVEL=info
+
+# =============================================
+# DEPLOYMENT NOTES
+# =============================================
+# 1. Copy this file to .env.local for local development
+# 2. Set these environment variables in your Vercel project:
+#    Project Settings → Environment Variables
+# 3. TWO databases needed:
+#    - Master Dashboard Database (run master-dashboard-schema.sql)
+#    - Shared CMS Database (run database-schema.sql)
+# 4. Make sure all API tokens have the necessary permissions
+# 5. Test the configuration with a demo deployment first
+
+# =============================================
+# ARCHITECTURE NOTES
+# =============================================
+# Master Dashboard Database:
+# - Stores instance records, deployment logs, analytics
+# - Uses master-dashboard-schema.sql
+# 
+# Shared CMS Database:
+# - Multi-tenant database for all CMS sites
+# - Uses database-schema.sql (the existing CMS schema)
+# - Each site gets a unique site_id
+# - All CMS instances share this one database
+
+# =============================================
+# SECURITY NOTES
+# =============================================
+# ⚠️  NEVER commit this file with real values to version control
+# ⚠️  Keep both service role keys secure
+# ⚠️  Rotate API tokens regularly
+# ⚠️  Use environment-specific configurations
+# ⚠️  Enable 2FA on all connected accounts (Vercel, Supabase, GitHub)
+
+# =============================================
+# API PERMISSIONS REQUIRED
+# =============================================
+
+# Vercel Token Permissions:
+# - Read and write access to projects
+# - Read and write access to deployments
+# - Read and write access to environment variables
+# - Read access to teams (if using team account)
+
+# Bitbucket API Token Permissions (Workspace-Scoped Recommended):
+# Create at: https://bitbucket.org/account/settings/api-tokens/
+# Select "Create API token with scopes" and choose workspace "trukraft"
+# Required scopes:
+# - Repositories: Read, Write, Admin (for creating and managing repos)
+# - Account: Read (for authentication)
+# - Projects: Read, Write (optional, for project organization)
+# - Pull requests: Read, Write (optional, for future automation)
+# - Issues: Read, Write (optional, for repo management)
+
+# Legacy App Password Permissions (deprecated - use API tokens instead):
+# - Repositories: Admin, Delete
+# - Account: Write
+# - Workspace membership: Write
+# - Projects: Write, Admin 
