@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
-import { ThemeProvider as CmsThemeProvider } from '@/lib/theme-context'
 
 export const metadata: Metadata = {
-  title: 'StreamLine - Page Builder CMS',
-  description: 'Streamline your workflow like never before',
+  title: 'Master Dashboard - CMS Management Platform',
+  description: 'Deploy and manage multiple CMS instances from one powerful dashboard',
   generator: 'v0.dev',
 }
 
@@ -23,9 +22,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <CmsThemeProvider>
-              {children}
-          </CmsThemeProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

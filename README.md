@@ -1,125 +1,161 @@
-# 🎨 Page Builder CMS
+# 🚀 Master Dashboard - CMS Management Platform
 
-A powerful, theme-based Page Builder CMS built with Next.js 15, Supabase, and modern React components. Create beautiful websites with drag-and-drop functionality, customizable themes, and a complete content management system.
+A powerful control center for deploying and managing unlimited Page Builder CMS instances. Deploy complete websites with one click, monitor performance, and scale effortlessly with modern web technologies.
 
 ## ✨ Features
 
 ### 🎯 Core Features
-- **Drag & Drop Page Builder**: Visual page creation with intuitive components
-- **Multi-Theme Support**: Switch between themes or create custom ones
-- **Template System**: Header, footer, and page templates for consistent design
-- **Content Management**: Full CRUD operations for pages, templates, and navigation
-- **Static Generation**: Performance optimization with static file generation
-- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **One-Click Deployment**: Create complete CMS instances instantly
+- **Multi-Site Management**: Control unlimited websites from one dashboard
+- **Auto-Provisioning**: Automatically creates Vercel projects and database setup
+- **Performance Monitoring**: Track deployments, analytics, and site health
+- **Template Management**: Organize and deploy different CMS templates
+- **Scalable Architecture**: Multi-tenant database with cost-effective shared infrastructure
 
 ### 🔧 Technical Features
 - **Next.js 15**: Latest React features with App Router
-- **Supabase Backend**: PostgreSQL database with real-time capabilities
-- **TypeScript**: Full type safety throughout the application
-- **Radix UI Components**: Accessible, unstyled components
-- **Multi-tenancy Ready**: Support for multiple sites in one deployment
+- **Supabase Backend**: PostgreSQL with multi-tenant Row Level Security
+- **TypeScript**: Full type safety throughout the application  
+- **Vercel Integration**: Seamless deployment automation
+- **Modern UI**: Radix UI components with beautiful dark theme
 
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
 - Node.js 18+ 
 - npm/pnpm
-- Supabase account
+- Supabase account (2 projects needed)
+- Vercel account with API access
 - Git
 
 ### 2. Local Development
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd page-builder-cms
+cd cms-master-dashboard
 
 # Install dependencies
 npm install
 
 # Set up environment variables
-cp env.example .env.local
-# Add your Supabase credentials to .env.local
+cp master-env.example .env.local
+# Add your Master Dashboard Supabase credentials to .env.local
 
-# Set up database
-# Follow SUPABASE-SETUP.md
+# Set up databases
+# Run master-dashboard-schema.sql in your Master Dashboard Supabase project
+# Set up shared CMS database for all instances
 
 # Start development server
 npm run dev
 ```
 
-Visit `http://localhost:3000` to see your CMS!
+Visit `http://localhost:3000` to access your Master Dashboard!
 
-### 3. Admin Panel
-- Access admin at `/admin`
-- Create your first pages and templates
-- Customize themes and navigation
+### 3. Master Dashboard
+- Access dashboard at `/master`
+- Create your first CMS instance
+- Monitor deployments and analytics
+- Manage all your websites from one place
 
 ## 🏗️ Project Structure
 
 ```
-Page Builder CMS V0/
+CMS Master Dashboard/
 ├── app/                    # Next.js App Router
-│   ├── [slug]/            # Dynamic page routes  
-│   ├── admin/             # Admin dashboard
-│   └── api/               # API endpoints
-├── components/
-│   ├── cms/               # CMS-specific components
-│   ├── themes/            # Theme components and configs
-│   └── ui/                # Reusable UI components
+│   ├── master/            # Master dashboard pages
+│   ├── api/master/        # Master dashboard API endpoints
+│   └── layout.tsx         # Root layout
+├── components/ui/          # Reusable UI components (Radix UI)
 ├── lib/                   # Utilities and configurations
-├── public/                # Static assets
-└── scripts/               # Build and utility scripts
+│   ├── master-supabase.ts # Master dashboard database functions
+│   └── supabase.ts        # Shared CMS database functions
+├── cms-master/            # CMS template files (deployed to instances)
+└── public/                # Static assets
 ```
 
-## 🎨 Themes
+## 🎮 How It Works
 
-### Current Themes
-- **Default**: Clean, modern design
-- **Modern**: Sleek and minimal
+### Creating a New Website
+1. **Access Master Dashboard** → Click "Create New Website"
+2. **Fill in Details**: Website name, owner info, template selection
+3. **One-Click Deploy** → System automatically:
+   - Creates new site record in shared database
+   - Creates Vercel project with proper environment variables
+   - Deploys CMS instance with unique `CMS_SITE_ID`
+   - Initializes default content and templates
 
-### Creating Custom Themes
-1. Copy `components/themes/default` to your new theme folder
-2. Customize components in the `ui/` directory
-3. Update `register-blocks.tsx` for component registration
-4. Modify `styles.css` for custom styling
+### Multi-Tenant Architecture
+- **Shared Database**: All CMS instances use one Supabase database
+- **Data Isolation**: Each site filters data by unique `site_id`
+- **Cost Effective**: No need for separate databases per site
+- **Scalable**: Handle hundreds of sites efficiently
 
 ## 📦 Deployment
 
-### Vercel (Recommended)
-1. **Quick Deploy**: Follow `VERCEL-DEPLOYMENT.md` (~10 minutes)
-2. **Detailed Guide**: See `DEPLOYMENT-GUIDE.md` for comprehensive setup
+### Deploy Master Dashboard
 
-### Other Platforms
-- Netlify: Compatible with standard Next.js deployment
-- Docker: Dockerfile can be added for containerized deployment
-- Self-hosted: Use `npm run build && npm start`
+1. **Deploy to Vercel**:
+   ```bash
+   vercel --prod
+   ```
 
-## 🗄️ Database
+2. **Set Environment Variables** in Vercel Dashboard:
+   ```bash
+   # Master Dashboard Database
+   NEXT_PUBLIC_MASTER_SUPABASE_URL=https://your-master-project.supabase.co
+   NEXT_PUBLIC_MASTER_SUPABASE_ANON_KEY=your-master-anon-key
+   MASTER_SUPABASE_SERVICE_ROLE_KEY=your-master-service-key
+   
+   # Shared CMS Database
+   NEXT_PUBLIC_SUPABASE_URL=https://shared-cms.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=shared-service-key
+   
+   # API Tokens
+   VERCEL_TOKEN=your-vercel-api-token
+   BITBUCKET_USERNAME=your-username
+   BITBUCKET_API_TOKEN=your-api-token
+   ```
 
-### Setup
-1. Create Supabase project
-2. Run `database-schema.sql`
-3. Configure environment variables
-4. See `SUPABASE-SETUP.md` for detailed instructions
+3. **Access Your Dashboard** at your Vercel URL
 
-### Key Tables
+## 🗄️ Database Architecture
+
+### Required Databases
+1. **Master Dashboard Database**: Tracks CMS instances and deployments
+2. **Shared CMS Database**: Stores all website content with multi-tenant isolation
+
+### Master Dashboard Tables
+- `cms_instances`: Website records and deployment info
+- `deployment_logs`: Deployment history and status
+- `cms_templates`: Available CMS templates
+- `notifications`: System alerts and messages
+
+### Shared CMS Tables (Multi-Tenant)
 - `sites`: Multi-tenant site management
-- `pages`: Page content and metadata
-- `templates`: Reusable page templates
-- `page_blocks` / `template_blocks`: Component data
-- `navigation_items`: Site navigation
+- `pages`: Page content and metadata (filtered by `site_id`)
+- `templates`: Reusable page templates (filtered by `site_id`)
+- `page_blocks` / `template_blocks`: Component data (filtered by `site_id`)
+- `navigation_items`: Site navigation (filtered by `site_id`)
 
 ## 🔧 Configuration
 
 ### Environment Variables
 ```bash
-# Required
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-key
+# Master Dashboard Database
+NEXT_PUBLIC_MASTER_SUPABASE_URL=https://your-master-project.supabase.co
+NEXT_PUBLIC_MASTER_SUPABASE_ANON_KEY=your-master-anon-key
+MASTER_SUPABASE_SERVICE_ROLE_KEY=your-master-service-key
 
-# Optional
-NEXT_PUBLIC_SITE_URL=your-domain.com
+# Shared CMS Database (used by all instances)
+NEXT_PUBLIC_SUPABASE_URL=https://shared-cms.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=shared-anon-key
+SUPABASE_SERVICE_ROLE_KEY=shared-service-key
+
+# API Tokens for Auto-Deployment
+VERCEL_TOKEN=your-vercel-api-token
+BITBUCKET_USERNAME=your-username
+BITBUCKET_API_TOKEN=your-api-token
+BITBUCKET_WORKSPACE=your-workspace
 ```
 
 ### Build Configuration
@@ -127,22 +163,29 @@ NEXT_PUBLIC_SITE_URL=your-domain.com
 - `vercel.json`: Vercel-specific configuration
 - `tailwind.config.ts`: Styling configuration
 
-## 🧩 Components & Blocks
+## 🎨 CMS Templates
 
-### Available Blocks [[memory:3370705]]
-- **Hero**: Eye-catching header sections
-- **Features**: Product/service highlights  
-- **CTA**: Call-to-action sections
-- **Testimonials**: Customer reviews
-- **Pricing**: Pricing tables
-- **Blog**: Content sections
-- **Header/Footer**: Navigation and site info
+### Available Templates
+Each deployed CMS instance comes with a complete set of:
+- **Default Theme**: Clean, modern design with drag-and-drop components
+- **Component Library**: Hero, Features, Testimonials, Pricing, Blog, CTA
+- **Template System**: Header, footer, and page templates
+- **Multi-Theme Support**: Easy theme switching and customization
 
-### Adding Custom Blocks
-1. Create component in `components/themes/[theme]/ui/`
-2. Register in `register-blocks.tsx`
-3. Add to component palette
-4. Test in page builder
+### Template Structure (in `cms-master/`)
+```
+cms-master/
+├── components/cms/        # CMS core functionality
+├── components/themes/     # Theme components and blocks
+├── components/ui/         # Radix UI components
+├── lib/                   # CMS utilities and configurations
+└── app/                   # CMS admin interface and pages
+```
+
+### Customizing Templates
+1. Modify files in `cms-master/` directory
+2. Templates automatically deploy to new instances
+3. Existing sites can be updated through the dashboard
 
 ## 🔒 Security
 
@@ -178,32 +221,30 @@ NEXT_PUBLIC_SITE_URL=your-domain.com
 ```bash
 npm run dev              # Start development server
 npm run build           # Build for production
-npm run build:themes   # Build theme assets
-npm run generate-static # Generate static files
-npm run lint           # Run ESLint
-npm start              # Start production server
+npm run lint            # Run ESLint
+npm start               # Start production server
+npm run deploy:vercel   # Deploy to Vercel
 ```
 
 ### Development Workflow
-1. Create/modify components in themes
-2. Test in page builder
-3. Update component registration
-4. Build and deploy
+1. **Master Dashboard Development**: Modify dashboard pages and API routes
+2. **CMS Template Updates**: Update files in `cms-master/` for new deployments
+3. **Database Changes**: Update schemas and migration scripts
+4. **Test & Deploy**: Test locally then deploy to production
 
 ## 📚 Documentation
 
-- `DEPLOYMENT-GUIDE.md`: Comprehensive deployment instructions
-- `VERCEL-DEPLOYMENT.md`: Quick Vercel setup
-- `SUPABASE-SETUP.md`: Database configuration
-- `ADMIN-GUIDE.md`: Admin panel usage
-- `CMS-README.md`: CMS-specific documentation
+- `MASTER-DASHBOARD-README.md`: Detailed Master Dashboard setup and usage
+- `UPDATED-ARCHITECTURE.md`: Multi-tenant architecture explanation
+- `master-dashboard-schema.sql`: Database schema for Master Dashboard
+- `cms-master/`: Complete CMS template for deployment
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
+3. Make your changes to Master Dashboard or CMS templates
+4. Test deployment functionality
 5. Submit a pull request
 
 ## 📄 License
@@ -213,16 +254,27 @@ This project is proprietary. See LICENSE file for details.
 ## 🆘 Support
 
 ### Getting Help
-- Check documentation files
-- Review troubleshooting sections
-- Open an issue for bugs
-- Join community discussions
+- Check `MASTER-DASHBOARD-README.md` for detailed setup
+- Review `UPDATED-ARCHITECTURE.md` for architecture details
+- Check Vercel deployment logs for deployment issues
+- Verify database connections in Supabase dashboard
 
 ### Common Issues
-- **Build failures**: Check Node.js version and dependencies
-- **Database errors**: Verify Supabase setup and credentials
-- **Theme issues**: Ensure proper component registration
+- **Deployment Fails**: Check API token permissions and environment variables
+- **Database Errors**: Verify both Master and Shared database configurations
+- **Missing Features**: Ensure all required environment variables are set
+
+## 🎯 What's Next?
+
+After setting up your Master Dashboard:
+
+1. **Create Your First Website** - Test the deployment process
+2. **Monitor Deployments** - Track build logs and deployment status
+3. **Scale Up** - Deploy multiple websites for clients or projects
+4. **Customize Templates** - Modify CMS templates in `cms-master/`
 
 ---
 
-**Built with ❤️ using Next.js, Supabase, and modern web technologies.** 
+**🚀 Ready to manage unlimited websites from one dashboard!**
+
+Built with ❤️ using Next.js, Supabase, Vercel, and modern web technologies. 
