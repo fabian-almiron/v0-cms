@@ -19,6 +19,12 @@ export async function POST(request: NextRequest) {
       }, { status: 503 })
     }
     
+    // Check for site ID from client
+    const body = await request.json().catch(() => ({}))
+    const clientSiteId = body.siteId
+    
+    console.log('🔍 API received site ID from client:', clientSiteId)
+    
     // Optional: Add authentication here to prevent unauthorized regeneration
     // const authHeader = request.headers.get('authorization')
     // if (authHeader !== `Bearer ${process.env.STATIC_GENERATION_SECRET}`) {
@@ -30,7 +36,8 @@ export async function POST(request: NextRequest) {
     
     // First ensure we have a default site configured
     try {
-      await ensureDefaultSite()
+      const siteId = await ensureDefaultSite()
+      console.log('🔍 API ensured site ID:', siteId)
     } catch (siteError) {
       console.error('❌ Error ensuring default site:', siteError)
       return NextResponse.json({ 

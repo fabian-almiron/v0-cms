@@ -875,62 +875,46 @@ async function cloneMasterRepositoryFiles(newRepoName: string) {
 }
 
 async function copyFromLocalCMSMaster(newRepoName: string, authHeader: string) {
-  console.log('📂 Copying from local cms-master directory using ZIP approach...')
+  console.log('📂 Copying ALL files from cms-master/* ...')
   
   const fs = require('fs')
   const path = require('path')
   
   const cmsPath = path.join(process.cwd(), 'cms-master')
   
-  // Check if cms-master directory exists
   if (!fs.existsSync(cmsPath)) {
     throw new Error('cms-master directory not found')
   }
   
   console.log(`✅ Found cms-master directory at: ${cmsPath}`)
   
-  try {
-    // Try the super-fast ZIP approach
-    await zipAndUploadCMSMaster(newRepoName, cmsPath, authHeader)
-    console.log('✅ Successfully uploaded CMS via ZIP method')
-  } catch (error) {
-    console.log('⚠️ ZIP method failed, falling back to batch upload:', error)
-    // Fallback to batch method
-    await copyEssentialFilesFromLocal(newRepoName, cmsPath, authHeader)
-    await copyDirectoriesInBatches(newRepoName, cmsPath, authHeader)
-  }
+  // Simple approach: Just ZIP everything and upload it
+  await zipAndUploadAllFiles(newRepoName, cmsPath, authHeader)
+  console.log('✅ Successfully uploaded ALL cms-master files')
 }
 
-async function zipAndUploadCMSMaster(newRepoName: string, cmsPath: string, authHeader: string) {
-  console.log('📦 Creating ZIP archive of cms-master...')
+async function zipAndUploadAllFiles(newRepoName: string, cmsPath: string, authHeader: string) {
+  console.log('📦 Creating ZIP of ALL cms-master files...')
   
   const fs = require('fs')
   const path = require('path')
   const archiver = require('archiver')
   
-  // Create a temporary zip file
-  const tempZipPath = path.join(process.cwd(), `${newRepoName}-temp.zip`)
+  // Create temporary zip file
+  const tempZipPath = path.join(process.cwd(), `${newRepoName}-complete.zip`)
   const output = fs.createWriteStream(tempZipPath)
   const archive = archiver('zip', { zlib: { level: 9 } })
   
   return new Promise(async (resolve, reject) => {
     output.on('close', async () => {
-      console.log(`✅ Created ZIP archive (${archive.pointer()} bytes)`)
+      console.log(`✅ Created complete ZIP (${archive.pointer()} bytes)`)
       
       try {
-        // Upload the zip and extract it
-        await uploadAndExtractZip(newRepoName, tempZipPath, authHeader)
-        
-        // Clean up temp file
-        fs.unlinkSync(tempZipPath)
-        console.log('🗑️ Cleaned up temporary ZIP file')
-        
+        await uploadCompleteZip(newRepoName, tempZipPath, authHeader)
+        fs.unlinkSync(tempZipPath) // Clean up
         resolve(true)
       } catch (error) {
-        // Clean up temp file on error too
-        if (fs.existsSync(tempZipPath)) {
-          fs.unlinkSync(tempZipPath)
-        }
+        if (fs.existsSync(tempZipPath)) fs.unlinkSync(tempZipPath)
         reject(error)
       }
     })
@@ -940,79 +924,59 @@ async function zipAndUploadCMSMaster(newRepoName: string, cmsPath: string, authH
     
     archive.pipe(output)
     
-    // Add all files from cms-master to the zip
-    archive.directory(cmsPath, false) // false = don't include the cms-master folder itself
+    // Add ALL files from cms-master (excluding system files)
+    archive.glob('**/*', {
+      cwd: cmsPath,
+      ignore: ['.DS_Store', '.git/**', 'node_modules/**', '.next/**']
+    })
     
     await archive.finalize()
   })
 }
 
-async function uploadAndExtractZip(newRepoName: string, zipPath: string, authHeader: string) {
-  console.log('📤 Uploading ZIP archive to Bitbucket...')
+async function uploadCompleteZip(newRepoName: string, zipPath: string, authHeader: string) {
+  console.log('📤 Uploading ALL files to Bitbucket in ONE API call...')
   
   const fs = require('fs')
-  
-  // For Bitbucket, we'll create a massive commit with all files at once
-  // Since Bitbucket doesn't have a native ZIP extract feature, we'll simulate it
-  // by reading the ZIP and creating all files in one big commit
-  
   const AdmZip = require('adm-zip')
+  
   const zip = new AdmZip(zipPath)
   const zipEntries = zip.getEntries()
   
-  console.log(`📋 Extracting ${zipEntries.length} files from ZIP...`)
+  console.log(`📋 Found ${zipEntries.length} files in ZIP`)
   
-  // Create one massive commit with all files and proper author info
+  // Create ONE massive form data with ALL files
+  const authorEmail = process.env.BITBUCKET_USERNAME || 'fabian.e.almiron@gmail.com'
+  const authorName = process.env.COMMIT_AUTHOR_NAME || 'Fabian Almiron'
+  
   let formData = `------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n`
-  formData += `Content-Disposition: form-data; name="message"\r\n\r\nBulk upload: Complete CMS from cms-master\r\n`
+  formData += `Content-Disposition: form-data; name="message"\r\n\r\nComplete CMS deployment - all files from cms-master\r\n`
   formData += `------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n`
   formData += `Content-Disposition: form-data; name="branch"\r\n\r\nmain\r\n`
   formData += `------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n`
-  formData += `Content-Disposition: form-data; name="author"\r\n\r\nFabian Almiron <fabian.e.almiron@gmail.com>\r\n`
+  formData += `Content-Disposition: form-data; name="author"\r\n\r\n${authorName} <${authorEmail}>\r\n`
   
   let fileCount = 0
-  let skippedCount = 0
   
   for (const zipEntry of zipEntries) {
     if (!zipEntry.isDirectory) {
-      const fileName = zipEntry.entryName
-      
-      // Only skip obvious system files, include everything else
-      if (fileName.includes('.DS_Store') || 
-          fileName.includes('.git/')) {
-        skippedCount++
-        continue
-      }
-      
       try {
-        // Try to read as text first
-        let fileContent
-        if (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.ico') || fileName.endsWith('.gif')) {
-          // For binary files, convert to base64
-          fileContent = zipEntry.getData().toString('base64')
-          formData += `------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n`
-          formData += `Content-Disposition: form-data; name="${fileName}"\r\nContent-Transfer-Encoding: base64\r\n\r\n${fileContent}\r\n`
-        } else {
-          // For text files, use UTF-8
-          fileContent = zipEntry.getData().toString('utf8')
-          formData += `------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n`
-          formData += `Content-Disposition: form-data; name="${fileName}"\r\n\r\n${fileContent}\r\n`
-        }
+        const content = zipEntry.getData().toString('utf8')
+        formData += `------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n`
+        formData += `Content-Disposition: form-data; name="${zipEntry.entryName}"\r\n\r\n${content}\r\n`
         fileCount++
       } catch (error) {
-        console.log(`⚠️ Could not process ${fileName}, skipping:`, error.message)
-        skippedCount++
+        console.log(`⚠️ Skipping binary file: ${zipEntry.entryName}`)
       }
     }
   }
   
-  console.log(`📊 Processing complete: ${fileCount} files included, ${skippedCount} files skipped`)
-  
   formData += `------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n`
   
-  console.log(`📤 Uploading ${fileCount} files in single commit...`)
+  console.log(`📤 Making ONE API call with ${fileCount} files...`)
   
-  const uploadResponse = await fetch(`https://api.bitbucket.org/2.0/repositories/${BITBUCKET_WORKSPACE}/${newRepoName}/src`, {
+  const workspace = process.env.BITBUCKET_WORKSPACE || 'trukraft'
+  const uploadResponse = await fetch(`https://api.bitbucket.org/2.0/repositories/${workspace}/${newRepoName}/src`, {
     method: 'POST',
     headers: {
       'Authorization': authHeader,
@@ -1023,73 +987,15 @@ async function uploadAndExtractZip(newRepoName: string, zipPath: string, authHea
 
   if (!uploadResponse.ok) {
     const error = await uploadResponse.text()
-    throw new Error(`Failed to upload ZIP contents: ${uploadResponse.status} ${error}`)
+    throw new Error(`Failed to upload all files: ${uploadResponse.status} ${error}`)
   }
 
-  console.log(`✅ Successfully uploaded ${fileCount} files in single commit`)
+  console.log(`✅ Successfully uploaded all ${fileCount} files in ONE API call!`)
 }
 
-async function copyDirectoriesInBatches(newRepoName: string, cmsPath: string, authHeader: string) {
-  console.log('📁 Copying directories in batches as fallback...')
-  
-  const fs = require('fs')
-  const path = require('path')
-  
-  // Key directories to copy
-  const keyDirectories = ['app', 'components', 'lib', 'hooks']
-  
-  for (const dirName of keyDirectories) {
-    const dirPath = path.join(cmsPath, dirName)
-    if (fs.existsSync(dirPath)) {
-      console.log(`📂 Batch copying ${dirName}/ directory...`)
-      await batchCopyDirectoryFiles(newRepoName, dirPath, dirName, authHeader)
-    } else {
-      console.log(`⚠️ Directory not found: ${dirName}`)
-    }
-  }
-}
 
-async function batchCopyDirectoryFiles(newRepoName: string, localDirPath: string, remoteDirName: string, authHeader: string) {
-  const fs = require('fs')
-  const path = require('path')
-  
-  const files = getAllFilesRecursively(localDirPath, remoteDirName)
-  
-  // Process in batches of 10 files
-  const batchSize = 10
-  for (let i = 0; i < files.length; i += batchSize) {
-    const batch = files.slice(i, i + batchSize)
-    await uploadFileBatch(newRepoName, batch, authHeader, `${remoteDirName} batch ${Math.floor(i/batchSize) + 1}`)
-  }
-}
 
-function getAllFilesRecursively(dirPath: string, prefix: string = ''): Array<{path: string, content: string}> {
-  const fs = require('fs')
-  const path = require('path')
-  
-  const result: Array<{path: string, content: string}> = []
-  const files = fs.readdirSync(dirPath, { withFileTypes: true })
-  
-  for (const file of files) {
-    if (file.isFile() && !file.name.startsWith('.')) {
-      const filePath = path.join(dirPath, file.name)
-      const remotePath = prefix ? `${prefix}/${file.name}` : file.name
-      
-      try {
-        const content = fs.readFileSync(filePath, 'utf8')
-        result.push({ path: remotePath, content })
-      } catch (error) {
-        console.log(`⚠️ Could not read ${filePath}:`, error)
-      }
-    } else if (file.isDirectory() && !file.name.startsWith('.')) {
-      const subDirPath = path.join(dirPath, file.name)
-      const subPrefix = prefix ? `${prefix}/${file.name}` : file.name
-      result.push(...getAllFilesRecursively(subDirPath, subPrefix))
-    }
-  }
-  
-  return result
-}
+
 
 async function uploadFileBatch(newRepoName: string, files: Array<{path: string, content: string}>, authHeader: string, batchName: string) {
   let formData = `------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n`

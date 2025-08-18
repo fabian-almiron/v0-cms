@@ -32,7 +32,9 @@ export function useNavigation(): UseNavigationReturn {
 
     try {
       // Try static files first (faster), fallback to database
+      console.log('🔍 Loading navigation from static files...')
       const data = await loadStaticNavigation()
+      console.log(`🔍 Loaded ${data?.length || 0} navigation items from static files`)
       setNavigation(data)
     } catch (error) {
       console.error('Error loading navigation:', error)

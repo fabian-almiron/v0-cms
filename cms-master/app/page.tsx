@@ -13,6 +13,7 @@ function Homepage() {
   const currentTheme = useCurrentTheme()
   const [pages, setPages] = useState<any[]>([])
   const [homePage, setHomePage] = useState<any>(null)
+  const [isSettingUpContent, setIsSettingUpContent] = useState(false)
 
   useEffect(() => {
     // Load pages from database
@@ -22,11 +23,47 @@ function Homepage() {
         const loadedPages = await loadPagesFromDatabase()
         setPages(loadedPages)
         
-        // Look for a homepage (slug 'home' or '/')
-        const home = loadedPages.find((page: any) => 
-          page.slug === 'home' || page.slug === '/' || page.slug === ''
-        )
-        setHomePage(home)
+        // If no pages exist, automatically create starter content
+        if (loadedPages.length === 0 && !isSettingUpContent) {
+          console.log('🚀 No pages found - creating starter content...')
+          setIsSettingUpContent(true)
+          
+          try {
+            const { setupCompleteStarterSite } = await import('@/lib/cms-data')
+            const success = await setupCompleteStarterSite()
+            
+            if (success) {
+              console.log('✅ Starter content created successfully!')
+              
+              // Give static files a moment to regenerate
+              await new Promise(resolve => setTimeout(resolve, 2000))
+              
+              // Reload pages after creating starter content
+              const newPages = await loadPagesFromDatabase()
+              setPages(newPages)
+              
+              // Find the home page
+              const home = newPages.find((page: any) => 
+                page.slug === 'home' || page.slug === '/' || page.slug === ''
+              )
+              setHomePage(home)
+              
+              // Refresh the page to ensure navigation loads properly
+              console.log('🔄 Refreshing page to load new navigation...')
+              window.location.reload()
+            }
+          } catch (error) {
+            console.error('❌ Failed to create starter content:', error)
+          } finally {
+            setIsSettingUpContent(false)
+          }
+        } else {
+          // Look for a homepage (slug 'home' or '/')
+          const home = loadedPages.find((page: any) => 
+            page.slug === 'home' || page.slug === '/' || page.slug === ''
+          )
+          setHomePage(home)
+        }
       } catch (error) {
         console.error('Error loading pages from database:', error)
         setPages([])
@@ -42,6 +79,20 @@ function Homepage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Loading Theme...</h1>
           <p className="text-gray-600">Please wait while we load your theme components.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading state while setting up starter content
+  if (isSettingUpContent) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-4">Setting Up Your Website...</h1>
+          <p className="text-gray-600 mb-2">Creating professional starter content</p>
+          <p className="text-sm text-gray-500">This includes pages, templates, and navigation</p>
         </div>
       </div>
     )
@@ -75,7 +126,7 @@ function Homepage() {
             Welcome to Your CMS
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            No pages have been created yet. Start building your website!
+            Your website is ready! Starter content will be created automatically on your next visit.
           </p>
           
           <div className="bg-white rounded-lg p-8 shadow-lg mb-8">

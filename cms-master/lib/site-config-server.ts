@@ -10,10 +10,17 @@ export interface SiteConfig {
 
 // Auto-configuration for Vercel deployments
 export function getCurrentSiteId(): string | null {
-  // Priority order for site ID detection:
-  // 1. Explicitly set CMS_SITE_ID (highest priority)
-  // 2. Auto-generated from Vercel deployment context
-  // 3. Default site ID fallback
+  // Priority order for site ID detection (match client-side logic):
+  // 1. NEXT_PUBLIC_CMS_SITE_ID (same as client-side)
+  // 2. CMS_SITE_ID (explicit server-side)
+  // 3. Auto-generated from Vercel deployment context
+  // 4. Default site ID fallback
+  
+  const publicSiteId = process.env.NEXT_PUBLIC_CMS_SITE_ID
+  if (publicSiteId) {
+    console.log('✅ Using public site ID (matches client):', publicSiteId)
+    return publicSiteId
+  }
   
   const explicitSiteId = process.env.CMS_SITE_ID || process.env.DEFAULT_SITE_ID
   if (explicitSiteId) {

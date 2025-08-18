@@ -86,20 +86,19 @@ export async function createSite(siteData: {
     console.log('   3. Redeploy your project')
     console.log('')
 
-    // Create starter templates for the new site
+    // Create complete starter content for the new site
     try {
-      console.log('Creating starter templates for new site...')
-      const { createStarterTemplatesInDatabase } = await import('./cms-data')
-      const templatesCreated = await createStarterTemplatesInDatabase()
+      const { setupCompleteStarterSite } = await import('./cms-data')
+      const setupSuccess = await setupCompleteStarterSite()
       
-      if (templatesCreated) {
-        console.log('✅ Starter templates created successfully for new site')
-      } else {
-        console.warn('⚠️ Failed to create starter templates for new site')
+      if (!setupSuccess) {
+        console.warn('⚠️ Some starter content creation failed')
+        console.log('   You can create content manually in the admin panel')
       }
-    } catch (templateError) {
-      console.error('Error creating starter templates for new site:', templateError)
-      // Don't fail site creation if template creation fails
+      
+    } catch (contentError) {
+      console.error('Error creating starter content for new site:', contentError)
+      // Don't fail site creation if content creation fails
     }
 
     return {

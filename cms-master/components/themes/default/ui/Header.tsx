@@ -45,6 +45,7 @@ export default function Header() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        const { loadPagesFromDatabase } = await import('@/lib/cms-data')
         const loadedPages = await loadPagesFromDatabase()
         setPages(loadedPages)
       } catch (error) {

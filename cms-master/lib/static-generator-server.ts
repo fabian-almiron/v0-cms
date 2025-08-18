@@ -88,6 +88,43 @@ export async function ensureDefaultSite(): Promise<string> {
       }
     }
     
+    // Create the site in database
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    let createdSiteId = null
+    
+    try {
+      const { data: newSite, error } = await supabase
+        .from('sites')
+        .insert([siteData])
+        .select()
+        .single()
+        
+      if (error) {
+        console.error('❌ Error creating site:', error)
+        throw error
+      }
+      
+      createdSiteId = newSite.id
+      console.log('✅ Site created with ID:', createdSiteId)
+      
+      // Site ID will be set via environment variables during deployment
+      console.log(`✅ Site created and will be accessible with site ID: ${createdSiteId}`)
+      
+      // Note: Starter content will be created automatically when the site is first accessed
+      console.log('📝 Starter content will be created when the site is first visited')
+      console.log('   This includes pages, templates, and navigation')
+      
+      return createdSiteId
+      
+    } catch (error) {
+      console.error('❌ Failed to create site:', error)
+      // Fall back to existing behavior
+    }
+    
     // If we have a consistent site ID, try to update existing site or create with specific ID
     if (autoSiteId) {
       try {
@@ -146,8 +183,16 @@ export async function generateNavigationFile() {
   try {
     console.log('📄 Generating static navigation file...')
     
+    const currentSiteId = getCurrentSiteId()
+    console.log('🔍 Static generation using site ID:', currentSiteId)
+    
     await ensureStaticDir()
     const navigation = await loadNavigationFromDatabase()
+    
+    console.log(`🔍 Loaded ${navigation?.length || 0} navigation items from database`)
+    if (navigation && navigation.length > 0) {
+      console.log('🔍 Navigation items:', navigation.map(n => `${n.label}(${n.type})`).join(', '))
+    }
     
     const filePath = path.join(STATIC_DIR, 'navigation.json')
     await fs.writeFile(filePath, JSON.stringify(navigation || [], null, 2))

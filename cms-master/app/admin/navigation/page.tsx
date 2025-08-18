@@ -197,18 +197,33 @@ export default function NavigationManager() {
     if (success) {
       console.log('✅ Navigation saved successfully!')
       
-      // Force a refresh of the navigation cache
+      // Force invalidate ALL navigation caches (including Vercel Edge Cache)
       try {
-        // Clear the navigation cache so the frontend picks up changes
+        console.log('🔄 Invalidating all navigation caches...')
+        
+        // 1. Clear local memory/localStorage cache
         const { clearNavigationCache } = await import('@/lib/cms-data')
         const { getCurrentSiteId } = await import('@/lib/site-config')
         const siteId = getCurrentSiteId()
         if (siteId) {
           clearNavigationCache(siteId)
-          console.log('🗑️ Frontend navigation cache cleared')
+          console.log('🗑️ Local navigation cache cleared')
         }
+        
+        // 2. Force refresh the API cache (invalidates Vercel Edge Cache)
+        const response = await fetch('/api/navigation', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        
+        if (response.ok) {
+          console.log('✅ API navigation cache refreshed')
+        } else {
+          console.warn('⚠️ Failed to refresh API cache:', response.status)
+        }
+        
       } catch (error) {
-        console.warn('⚠️ Failed to clear frontend cache:', error)
+        console.warn('⚠️ Failed to invalidate caches:', error)
       }
     } else {
       console.error('❌ Failed to save navigation')
@@ -337,32 +352,45 @@ export default function NavigationManager() {
             <Button 
               variant="outline" 
               onClick={async () => {
-                console.log('🔄 Manually refreshing navigation cache...')
+                console.log('🔄 Manually refreshing ALL navigation caches...')
                 try {
+                  // 1. Clear local caches
                   const { clearNavigationCache } = await import('@/lib/cms-data')
                   const { getCurrentSiteId } = await import('@/lib/site-config')
                   const siteId = getCurrentSiteId()
                   if (siteId) {
                     clearNavigationCache(siteId)
-                    console.log('✅ Navigation cache cleared successfully')
-                    
-                    // Also trigger static file regeneration
-                    const response = await fetch('/api/generate-static', { 
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' }
-                    })
-                    
-                    if (response.ok) {
-                      console.log('✅ Static files regenerated')
-                      alert('Navigation cache refreshed! Changes should now be visible on the frontend.')
-                    } else {
-                      console.warn('⚠️ Static file regeneration failed')
-                      alert('Navigation cache cleared, but static file regeneration failed.')
-                    }
+                    console.log('✅ Local navigation cache cleared')
+                  }
+                  
+                  // 2. Force refresh the navigation API cache (invalidates Vercel Edge)
+                  const navResponse = await fetch('/api/navigation', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                  })
+                  
+                  if (navResponse.ok) {
+                    console.log('✅ Navigation API cache refreshed')
+                  } else {
+                    console.warn('⚠️ Navigation API cache refresh failed:', navResponse.status)
+                  }
+                  
+                  // 3. Also trigger general static file regeneration
+                  const response = await fetch('/api/generate-static', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                  })
+                  
+                  if (response.ok) {
+                    console.log('✅ Static files regenerated')
+                    alert('All navigation caches refreshed! Your new nav item should now be visible on the frontend.')
+                  } else {
+                    console.warn('⚠️ Static file regeneration failed')
+                    alert('Navigation caches cleared, but static file regeneration had issues.')
                   }
                 } catch (error) {
-                  console.error('❌ Failed to refresh cache:', error)
-                  alert('Failed to refresh navigation cache.')
+                  console.error('❌ Failed to refresh caches:', error)
+                  alert('Failed to refresh navigation caches.')
                 }
               }}
             >
